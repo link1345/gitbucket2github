@@ -4,6 +4,7 @@
 import os
 import json
 import requests
+import time
 
 GITBUCKET_API_BASEURL='http://gitbacket.example.com/api/v3/repos/USERNAME/REPONAME'
 GITBUCKET_APP_TOKEN='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -13,7 +14,6 @@ GITHUB_API_BASEURL='https://api.github.com/repos/USERNAME/REPONAME'
 GITHUB_APP_TOKEN='XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 GITHUB_MASTER_REPONAME='main'
 GITHUB_OWNERNAME='USERNAME'
-
 
 # -- GitBacket ------------------------------------------------------------------------------------
 # GitBucket から issue と pull request を取得する
@@ -60,13 +60,15 @@ def create_dammy (base_url, headers, title, owner):
     payload = json.dumps({'title':'[PULL] ' + title, 'body':body, 'labels': labels,
                           'assignees':assignees})
     response = requests.post(url, headers=headers, data=payload)
+    time.sleep(8)
 
     # close the dammy issue.
     result = response.json()
     url = '%s/issues/%d' % (base_url, result['number'])
     payload = json.dumps({'state':'closed'})
     response = requests.post(url, headers=headers, data=payload)
-    
+    time.sleep(8)
+
     return
 
 
@@ -87,6 +89,7 @@ def create_pull (base_url, headers, pull, gitbacket_master, github_master):
     payload = json.dump({'title': issue['title'], 'body':issue['body'], 'head':issue['head']['ref'],
                          'base':base, 'draft':issue['draft']})
     response = requests.post(url, headers=headers, data=payload)
+    time.sleep(8)
     pull_number = response.json()['number']
 
     # Create a pull comment.
@@ -94,6 +97,7 @@ def create_pull (base_url, headers, pull, gitbacket_master, github_master):
     for comment in issue['comments']:
         payload = json.dumps({'body': comment['body']})
         response = requests.post(url, headers=headers, data=payload)
+        time.sleep(8)
 
     # Close a pull.
     # クローズ済みの Pull Request は ダミー Issue に置き換えているので存在しない.
@@ -117,19 +121,20 @@ def create_issue (base_url, headers, issue, owner):
                           'assignees':assignees})
     response = requests.post(url, headers=headers, data=payload)
     issue_number = response.json()['number']
+    time.sleep(8)
 
     # Create an issue comment.
     url = '%s/issues/%d/comments' % (base_url, issue_number)
     for comment in issue['comments']:
         payload = json.dumps({'body': comment['body']})
         response = requests.post(url, headers=headers, data=payload)
-    
+        time.sleep(8)
     # Close an issue.
     if issue['state'] == 'closed':
         url = '%s/issues/%d' % (base_url, issue_number)
         payload = json.dumps({'state': 'closed'})
         response = requests.post(url, headers=headers, data=payload)
-
+        time.sleep(8)
     return
 
 
